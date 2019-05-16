@@ -1138,47 +1138,6 @@ void ComfilAddBox()
 	cout<<"Vi du 5:";
 }
 
-void AddBox()
-{
-	gotoxy(BoxX, BoxY);
-	cout<<char(201);
-	for(int i = 0; i<BoxXE-6; i++)
-	{
-		cout<<char(205);
-	}
-	cout<<char(187);
-	gotoxy(BoxX,BoxY+1);
-	cout<<char(186);
-	gotoxy(BoxXE, BoxY+1);
-	cout<<char(186);
-	gotoxy(BoxX, BoxY +2);
-	cout<<char(204);
-	for(int i = 0; i<BoxXE-6; i++)
-	{
-		cout<<char(205);
-	}
-	gotoxy(BoxXE, BoxY+2);
-	cout<<char(185);
-	for(int i=0; i<10; i++)
-	{
-		gotoxy(BoxX, BoxY+3+i);
-		cout<<char(186);
-		gotoxy(BoxXE, BoxY+3+i);
-		cout<<char(186);
-	}
-	gotoxy(BoxX, BoxY+13);
-	cout<<char(200);
-	for(int i=0; i<BoxXE-6; i++)
-	cout<<char(205);
-	cout<<char(188);
-	gotoxy(BoxX+2, BoxY+ 11 );
-	cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!Ket thuc bang dau cham phay";
-	gotoxy(BoxX + 15, BoxY + 16);
-	for(int i=0; i<40; i++)
-	{
-		cout<<char(205);
-	}
-}
 
 void Box_save_word()
 {
@@ -1222,13 +1181,13 @@ void Addword(HTable *&Dict){
 	DelDetail();
 	string text;
 	string field[8] = {""};
-		int k = 1;
-		int Input = 0;
-		text = field[k-1];
-		int dem = field[k-1].length();
-		gotoxy(BoxX+BoxS +5, BoxY +BoxW );
-		cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!";
-		Del_Menu();
+	int k = 1;
+	int Input = 0;
+	text = field[k-1];
+	int dem = field[k-1].length();
+	gotoxy(BoxX+BoxS +5, BoxY +BoxW );
+	cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!";
+	Del_Menu();
 		while(Input != 27){
 			ComfilAddBox();
 			gotoxy(BoxX + BoxS +11, BoxY +2+ k);
@@ -1339,27 +1298,36 @@ void Addword(HTable *&Dict){
 				}
 			}
 		}
+		gotoxy(1,1);
+		cout<<Input;
 		if(Input == 27){
-			if(field[0] != "")
+			if(field[0]!="" && field[1] !="" && field[2]!="")
 			{
 				Box_save_word();
 				confim_add();
 				Input = getch();
 				if(Input == 13)
 				{
+					gotoxy(5, 1);
+					cout<<Input;
 					NODEWORD *Tu1 = new NODEWORD;
 					Tu1->data.This = field[0];
 					Tu1->data.Type = field[1];
 					string t = field[2];
 					string tmp = "";
 					Tu1->data.First = NULL;
-					for(int i=0; i<t.length(); i++)
+					for(int i=0; i<=t.length(); i++)
 					{
 						if(t[i] == ';')
 						{
 							Add_Mean_Head(Tu1->data.First, tmp); // them vao dau moi nghia
 							tmp = "";
 							i++;
+						}
+						//tmp += t[i];
+						if(t[i] == '\0')
+						{
+							Add_Mean_Head(Tu1->data.First, tmp);
 						}
 						tmp += t[i];
 					}
@@ -1376,7 +1344,6 @@ void Addword(HTable *&Dict){
 				}
 			}
 		}	
-	//system("cls");
 }
 
 //		  =========== End Detail =============
