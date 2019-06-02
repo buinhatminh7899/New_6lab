@@ -10,8 +10,8 @@
 #define BoxS 25
 #define BoxS1 108
 #define BoxXE 78
-#define BoxYE 26
-#define BoxW 17
+#define BoxYE 38
+#define BoxW 29
 
 bool update = true;
 
@@ -467,7 +467,7 @@ short stringlineout(string text, short max)		//Ham tra ve so dong can de xuat ch
 	return n;
 }
 
-void stringout(string text, int max)		//ham tu dong xuong dong, dong co max ki tu
+void stringout(string text, int max, int Line)		//ham tu dong xuong dong, dong co max ki tu
 {
 	int x = max;
 	short i = 0,count;
@@ -489,11 +489,12 @@ void stringout(string text, int max)		//ham tu dong xuong dong, dong co max ki t
 		else if(str.length() == x)
 		{
 			cout<<str;
-			x = x - str.length();
+			x = max;
+			gotoxy(BoxX + BoxS + 8, ++Line);
 		}
 		else
 		{
-			cout<<endl;
+			gotoxy(BoxX + BoxS + 8, ++Line);
 			cout<<str<<" ";
 			x = max - str.length() - 1;
 		}
@@ -547,8 +548,8 @@ void Detail(NODEWORD *Curr)
 		if(Curr->data.Exam[i] != NULL)
 		{
 			gotoxy(BoxX + BoxS + 3, BoxY + Line + k);
-			Line += stringlineout("   > " + *Curr->data.Exam[i], BoxS1 - 2);
-			stringout("   > " + *Curr->data.Exam[i], BoxS1 - 2);
+			Line += stringlineout("   > " + *Curr->data.Exam[i], BoxS1 - BoxS - 7);
+			stringout("   > " + *Curr->data.Exam[i], BoxS1 - BoxS - 3, BoxY + Line + k - 2);
 		}
 	}
 	
@@ -1021,16 +1022,22 @@ short checkerror(HTable *Dict, string text, short k)
 				}
 			}
 	}
-	if(k==2)
+	if(k==3)
 	{
 		if(text == ""){
 			return 3;
 		}
 	}
-	if(k==3)
+	if(k==5)
 	{
 		if(text == ""){
 			return 4;
+		}
+	}
+	if(k==7)
+	{
+		if(text == ""){
+			return 5;
 		}
 	}
 	return 0;
@@ -1061,12 +1068,16 @@ void printerror(short k)
 	{
 		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap nghia cua tu!";
 	}
+	else if(k==5)
+	{
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap vi du cho tu!";
+	}
 }
 
 void printtextfield(string t, short k){
 	gotoxy(BoxX + BoxS + 11, BoxY + 2+k);
 	if(t.length() > BoxS1-35) {
-		for(int i = 0; i < BoxS1-35; i++) cout << t[i];
+		stringout(t,BoxS1-35, BoxY +2+k);
 	}
 	else if(t.length() < BoxS1-35) {
 		cout << t;
@@ -1084,7 +1095,7 @@ void Add_Word_In_HTable(NODEWORD *&Head, NODEWORD *&Tail, NODEWORD *&NewWord)
 	}
 	else while(run != NULL)
 		{
-			if(run->data.This.compare(NewWord->data.This) < 0) 
+			if(run->data.This.compare(NewWord->data.This) < 0) //so sanh tung kí tu cua tu
 			{
 				if(run->Right == NULL) // them vao cuoi
 				{
@@ -1122,19 +1133,19 @@ void ComfilAddBox()
 	cout<<" ADD WORD ";
 	gotoxy(BoxX+BoxS+3, BoxY+3);
 	cout<<"     Tu:";
-	gotoxy(BoxX+BoxS+3, BoxY+4);
-	cout<<"Loai tu:";
 	gotoxy(BoxX+BoxS+3, BoxY+5);
-	cout<<"  Nghia:";
-	gotoxy(BoxX+BoxS+3, BoxY+6);
-	cout<<"Vi du 1:";
+	cout<<"Loai tu:";
 	gotoxy(BoxX+BoxS+3, BoxY+7);
-	cout<<"Vi du 2:";
-	gotoxy(BoxX+BoxS+3, BoxY+8);
-	cout<<"Vi du 3:";
+	cout<<"  Nghia:";
 	gotoxy(BoxX+BoxS+3, BoxY+9);
+	cout<<"Vi du 1:";
+	gotoxy(BoxX+BoxS+3, BoxY+11);
+	cout<<"Vi du 2:";
+	gotoxy(BoxX+BoxS+3, BoxY+13);
+	cout<<"Vi du 3:";
+	gotoxy(BoxX+BoxS+3, BoxY+15);
 	cout<<"Vi du 4:";
-	gotoxy(BoxX+BoxS+3, BoxY+10);
+	gotoxy(BoxX+BoxS+3, BoxY+17);
 	cout<<"Vi du 5:";
 }
 
@@ -1143,37 +1154,37 @@ void Box_save_word()
 {
 	for(int i=0; i<7; i++)
 	{
-		gotoxy(27,10+i);
-		for(int j=0; j<40;j++)
+		gotoxy(33,10+i);
+		for(int j=0; j<66;j++)
 			cout<<" ";
 	}
-	gotoxy(27,10);
+	gotoxy(33,10);
 	cout<<char(201);
-	for(int i=0; i<38; i++)
+	for(int i=0; i<50; i++)
 	{
 		cout<<char(205);
 	}
 	cout<<char(187);
 	for(int i=0;i<6;i++)
 	{
-		gotoxy(27,11+i);
+		gotoxy(33,11+i);
 		cout<<char(186);
-		gotoxy(66,11+i);
+		gotoxy(84,11+i);
 		cout<<char(186);
 	}
-	gotoxy(27, 17);
+	gotoxy(33, 17);
 	cout<<char(200);
-	for(int i=0; i<38; i++)
+	for(int i=0; i<50; i++)
 	cout<<char(205);
 	cout<<char(188);	
 }
 
 void confim_add()
 {
-	gotoxy(29, 12);
+	gotoxy(35, 12);
 	cout<<"Xac nhan luu tu moi!";
-	gotoxy(29, 15);
-	cout<<"Enter: Save "<<"     "<<" Another key: Cancel";
+	gotoxy(35, 15);
+	cout<<"Enter: Save "<<"    "<<" Esc: Quit"<<"    "<<" Another key: Back";
 }
 
 void Addword(HTable *&Dict){
@@ -1183,12 +1194,13 @@ void Addword(HTable *&Dict){
 	string field[8] = {""};
 	int k = 1;
 	int Input = 0;
-	text = field[k-1];
-	int dem = field[k-1].length();
-	gotoxy(BoxX+BoxS +5, BoxY +BoxW );
+	text = field[k/2];
+	int dem = field[k/2].length();
+	gotoxy(BoxX+BoxS +5, BoxY +BoxW + 2 );
 	cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!";
 	Del_Menu();
-		while(Input != 27){
+		while(Input !=27){
+			Again:
 			ComfilAddBox();
 			gotoxy(BoxX + BoxS +11, BoxY +2+ k);
 			if (dem < BoxS1-35 )	
@@ -1197,12 +1209,12 @@ void Addword(HTable *&Dict){
 				for (int i = 0; i < BoxS1-35-dem ; i++)	cout << " ";
 			}
 			
-			else for(int i = dem - (BoxS1-35); i< dem; i++)	cout << text[i];
-			
+			else stringout(text,BoxS1-35, BoxY +2+k);
 			if(dem < BoxS1-35) gotoxy(BoxX + BoxS + 11 + dem, BoxY +2+ k); //Xuat ra vi tri con tro khi khung nhap chua bi tran
 			else gotoxy(BoxS1+6, BoxY +2+ k);
-			
 			Input = getch();
+			gotoxy(1,1);
+			cout<<Input;
 			switch(Input)
 			{
 				case 13: //enter
@@ -1216,12 +1228,12 @@ void Addword(HTable *&Dict){
 					{
 						text = FixText(text);
 						printtextfield(text, k);
-						field[k-1] = text;
+						field[k/2] = text;
 						Del_Menu();
-						if(k<8) k++;
-						else if(k==8) break;
-						dem = field[k-1].length();
-						text = field[k-1];	
+						k+=2;
+						if(k==17) goto Saveadd;
+						dem = field[k/2].length();
+						text = field[k/2];	
 					}	
 					break;
 				}
@@ -1240,11 +1252,11 @@ void Addword(HTable *&Dict){
 						{
 							text = FixText(text);
 							printtextfield(text, k);
-							field[k-1] = text;
+							field[k/2] = text;
 							Del_Menu();
-							if(k>1) k--;
-							dem = field[k-1].length();
-							text = field[k-1];	
+							if(k>1) k-=2;
+							dem = field[k/2].length();
+							text = field[k/2];	
 						}
 						//break;
 					}
@@ -1259,12 +1271,12 @@ void Addword(HTable *&Dict){
 						{
 							text = FixText(text);
 							printtextfield(text, k);
-							field[k-1] = text;
+							field[k/2] = text;
 							Del_Menu();
-							if(k<8) k++;
-							else if(k==8) break;
-							dem = field[k-1].length();
-							text = field[k-1];	
+							if(k<17) k+=2;
+							//else if(k==17) break;
+							dem = field[k/2].length();
+							text = field[k/2];	
 						}
 						//break;
 					}
@@ -1292,17 +1304,14 @@ void Addword(HTable *&Dict){
 						}
 						else
 						{
-							for (int i = dem - (BoxS1-35); i<dem; i++)	cout << text[i];
+							stringout(text,BoxS1-35, BoxY +2+k);
 						}
 					}
 				}
 			}
-		}
-		gotoxy(1,1);
-		cout<<Input;
-		if(Input == 27){
-			if(field[0]!="" && field[1] !="" && field[2]!="")
-			{
+			}
+			if(field[0]!="" && field[1] !="" && field[2]!=""){
+				Saveadd:
 				Box_save_word();
 				confim_add();
 				Input = getch();
@@ -1339,12 +1348,24 @@ void Addword(HTable *&Dict){
 							*(Tu1->data.Exam[i]) = field[i+3];
 						}
 					}
-					Add_Word_In_HTable(Dict[Address(Tu1->data.This)].Head, Dict[Address(Tu1->data.This)].Tail, Tu1);
 					updated = true;
+					Add_Word_In_HTable(Dict[Address(Tu1->data.This)].Head, Dict[Address(Tu1->data.This)].Tail, Tu1);
+				}
+				else if((Input < 123 && Input > 96) || (Input < 91 && Input > 64) || Input == 32 || Input == 39 || Input == 45 || Input == 59)
+				{
+					for(int i=0; i<8; i++)
+					{
+						gotoxy(33,10+i);
+						for(int j=0; j<55;j++)
+						cout<<" ";
+					}
+					goto Again;
 				}
 			}
-		}	
-}
+		}
+//	}
+//			
+//}
 
 //		  =========== End Detail =============
 
