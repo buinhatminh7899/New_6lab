@@ -1,3 +1,10 @@
+
+//							The standard format of a word includes: 
+//									- word
+//									- type
+//									- a meaning
+//									- an example
+
 #include <iostream>
 #include <fstream>
 #include <windows.h>
@@ -38,7 +45,8 @@ struct Word
 	NODEMEAN *First;
 };
 
-struct NODEWORD {
+struct NODEWORD 
+{
 	Word data;
 	NODEWORD *Left;
 	NODEWORD *Right;
@@ -120,7 +128,7 @@ NODEWORD* SplitInfo(string Line)
 	while (Line[i] != '/') 
 	{
 		Text += Line[i++];
-		if (Line[i] == ';')
+		if (Line[i] == ';') 
 		{
 			Add_Mean_Head(p->data.First, Text);
 			Text = "";
@@ -162,7 +170,8 @@ void ReadFile(HTable *&Dict) {
 	}
 }
 
-void gotoxy(short x, short y) {
+void gotoxy(short x, short y) 
+{
 	HANDLE hConsoleOutput;
 	COORD Cursor_an_Pos = { x, y };
 	hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -427,6 +436,52 @@ NODEWORD *Left(HTable *Dict, NODEWORD *Curr)
 
 //        ===========  Detail ==========
 
+string Tail_String_Out(string text, short max)
+{
+	short n = 1, x = max;
+	short i = 0,count;
+	string str = "", Saved = "";
+	while(1)
+	{
+		while(text[i] != ' ')
+		{
+			str += text[i];
+			i++;
+			if( i == text.length())
+				break;
+		}
+		if(str.length() < x)
+		{
+			x = x - str.length() - 1;
+		}
+		else if(str.length() == x)
+		{
+			x = max;
+			if ( i != text.length())
+				Saved = "";
+		}
+		else
+		{
+			Saved = "";
+			x = max - str.length() - 1;
+			if( x < 0)
+			{
+				x = max;
+			}
+		}
+		
+		if(Saved == "")
+			Saved = str;
+		else
+			Saved = Saved + " " + str;
+			
+		if( i == text.length())
+				return Saved;
+		i++;
+		str="";
+	}
+}
+
 short stringlineout(string text, short max)		//Ham tra ve so dong can de xuat chuoi, dong co max ki tu
 {
 	short n = 1, x = max;
@@ -548,7 +603,7 @@ void Detail(NODEWORD *Curr)
 		if(Curr->data.Exam[i] != NULL)
 		{
 			gotoxy(BoxX + BoxS + 3, BoxY + Line + k);
-			Line += stringlineout("   > " + *Curr->data.Exam[i], BoxS1 - BoxS - 7);
+			Line += stringlineout("   > " + *Curr->data.Exam[i], BoxS1 - BoxS - 3);
 			stringout("   > " + *Curr->data.Exam[i], BoxS1 - BoxS - 3, BoxY + Line + k - 2);
 		}
 	}
@@ -761,6 +816,94 @@ void Delete_mean_info(NODEMEAN *&First, string Text)
 	return;
 }
 
+void SortExam(NODEWORD *&Curr)
+{
+	if(CountExam(Curr) >= 1)
+	{
+		for(int i = 0; i < MAXEXAM - 1; i++)
+		{
+			if(Curr->data.Exam[i] == NULL && Curr->data.Exam[i+1] != NULL)
+			{
+				Curr->data.Exam[i] = Curr->data.Exam[i+1];
+				Curr->data.Exam[i+1] = NULL;
+			}
+		}
+	}
+}
+
+void DelMean(NODEMEAN *&First, string Text)
+{
+	NODEMEAN *Run = First;
+	if(First == NULL)	return;
+	if(Run->data == Text) 
+	{
+		First = Run->Next;
+		Run = NULL;
+		delete Run;
+		return;
+	}
+	
+	for( ; Run->Next != NULL && Run->Next->data != Text; Run = Run->Next);
+	
+	if(Run->Next != NULL)
+	{
+		NODEMEAN *q = Run->Next;
+		Run->Next = q->Next;
+		delete q;
+		return;
+	}
+	
+	return;
+}
+
+void DelExam(NODEWORD *&Curr, string Text)
+{
+	for(int i = 0; i < MAXEXAM; i++)
+	{
+		if(*Curr->data.Exam[i] == Text)
+		{
+			delete Curr->data.Exam[i];
+			Curr->data.Exam[i] = NULL;
+			break;
+		}
+	}
+	SortExam(Curr);
+}
+
+short Support_Move_Up(string Text, short &Move)
+{
+	Move -= stringlineout(Text, BoxS1 - BoxS - 3);
+}
+
+short Support_Move_Down(NODEWORD *Curr, short Line, short &Move)
+{
+	string Text = "";
+	short x = CountMean(Curr) + 1 + CountExam(Curr), tmp = 0;
+	if(Line == 4)
+	{
+		Text = Curr->data.Type;
+	}
+	else if(Line < x + 4 && Line > x + 3 - CountExam(Curr))
+		{
+			tmp = x - (Line - 3);
+			Text = *Curr->data.Exam[CountExam(Curr) - tmp - 1];			//countexam - x
+		}
+	else
+	{
+		NODEMEAN *First = Curr->data.First;
+		short k = 0;
+		while(k < CountMean(Curr) && k != Line - 5)
+		{
+			First = First->Next;
+			k++;
+		}
+		Text = "";
+		Text = First->data;
+	}
+	
+	Move += stringlineout(Text, BoxS1 - BoxS - 3);
+}
+
 void Edit(HTable *&Dict, NODEWORD *&Curr)
 {
 	bool changed = false;
@@ -769,7 +912,7 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 	short x = 0,i,dem,tmp = 0;
 	string Text = "";
 	short Input = 0;
-	short Line = 4;
+	short Line = 4, Move = 4;
 	while(Input != 27)
 	{
 		x = CountMean(Curr) + 1 + CountExam(Curr);
@@ -781,13 +924,16 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 		if(Line == 4)
 		{
 			Text = Curr->data.Type;
-			gotoxy(BoxX + BoxS + 3 + Curr->data.Type.length(), BoxY + Line);
+			gotoxy(BoxX + BoxS + 3 + Curr->data.Type.length(), BoxY + Move);
 		}
 		else if(Line < x + 4 && Line > x + 3 - CountExam(Curr))
 			{
 				tmp = x - (Line - 3);
-				Text = *Curr->data.Exam[CountExam(Curr) - tmp - 1];
-				gotoxy(BoxX + BoxS + 8 + Text.length(), BoxY + Line);
+				Text = *Curr->data.Exam[CountExam(Curr) - tmp - 1];			//countexam - x
+			//	if ( stringlineout(Text, BoxS1 - BoxS - 3) == 1)
+					gotoxy(BoxX + BoxS + 8 + Tail_String_Out(FixText(Text),  BoxS1 - BoxS - 3).length(), BoxY + Move);
+			//	else
+			//		gotoxy(BoxX + BoxS + 8 + Tail_String_Out(FixText(Text),  BoxS1 - BoxS - 3).length(), BoxY + Move);
 			}
 		else
 		{
@@ -800,7 +946,7 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 			}
 			Text = "";
 			Text = First->data;
-			gotoxy(BoxX + BoxS + 7 + Text.length(), BoxY + Line);
+			gotoxy(BoxX + BoxS + 7 + Text.length(), BoxY + Move);
 		}	
 			
 			
@@ -811,8 +957,16 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 			case 224:	//Up Down
 			{
 				Input = getch();
-				if (Input == 72 && Line > 4)	Line--;
-				else if (Input == 80 && Line < x + 3) 	Line++;
+				if (Input == 72 && Line > 4)//	Line--;
+				{
+					Support_Move_Up(Text,Move);
+					Line--;
+				}
+				else if (Input == 80 && Line < x + 3)// 	Line++;
+				{
+					Line++;
+					Support_Move_Down(Curr, Line, Move);
+				}
 				
 				
 				if( Input == 83)	//Delete
@@ -821,7 +975,7 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 					{
 						EditBox();
 						gotoxy(BoxXE + 2, BoxYE + 2);
-						cout<<"YOU CAN DELETE TYPE OF THE WORD !";
+						cout<<"YOU CAN'T DELETE TYPE OF THE WORD !";
 						gotoxy(BoxXE + 2, BoxYE + 3);
 						cout<<"Press any key to continue !";
 						getch();
@@ -829,24 +983,33 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 					}
 					else if(Line < x + 4 && Line > x + 3 - CountExam(Curr))
 					{
-						tmp = x - (Line - 3);
-						Curr->data.Exam[4 - tmp] = NULL;
-						delete Curr->data.Exam[4 - tmp];
-						Line = 4;
-						changed = true;
-						break;					
+						if( CountExam(Curr) > 1)
+						{
+							DelExam(Curr,Text);
+							Line--;
+							changed = true;
+							updated = true;	
+						}
+						else
+						{
+							EditBox();
+							gotoxy(BoxXE + 2, BoxYE + 1);
+							cout<<"The word must have at least one";
+							gotoxy(BoxXE + 2, BoxYE + 2);
+							cout<<"example !";
+							gotoxy(BoxXE + 2, BoxYE + 3);
+							cout<<"Press any key to continue !";
+							getch();
+							Del_EditBox();
+						}
+									
 					}
 					else
 					{
 						if( CountMean(Curr) > 1)
 						{
-							NODEMEAN *First = Curr->data.First;
-							short k = 0;
-							while(k < CountMean(Curr) && k != Line - 5)
-							{
-								First = First->Next;
-								k++;
-							}
+							DelMean(Curr->data.First,Text);
+							Line--;
 							changed = true;
 							update = true;	
 						}
@@ -856,7 +1019,7 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 							gotoxy(BoxXE + 2, BoxYE + 1);
 							cout<<"The word must have at least one";
 							gotoxy(BoxXE + 2, BoxYE + 2);
-							cout<<"maeaning !";
+							cout<<"meaning !";
 							gotoxy(BoxXE + 2, BoxYE + 3);
 							cout<<"Press any key to continue !";
 							getch();
@@ -874,12 +1037,50 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 						case 49:		//mean
 						{
 							EditBox();
-							gotoxy(BoxXE + 2, BoxYE + 2);
-							string Mean = "";
-							getline(cin,Mean);
-							Add_Mean_Head(Curr->data.First,Mean);
-							updated = true;
-							changed = true;
+							string Meaning = "";
+							int a;
+							while( a != 27 )
+							{
+								gotoxy(BoxXE + 2, BoxYE + 2);
+								if (Meaning.length() < BoxS1 - BoxXE + 5)
+								{
+									cout << Meaning;
+									for(int i = Meaning.length(); i < BoxS1 - BoxXE + 4; i++)	cout<<" ";
+								}
+								else	for (int i = Meaning.length() - (BoxS1 - BoxXE + 5) + 1; i< Meaning.length(); i++)	cout << Meaning[i];
+								
+								if (Meaning.length() < BoxS1 - BoxXE + 4)	gotoxy(BoxXE + Meaning.length() + 2, BoxYE + 2);
+								else gotoxy(BoxS1 + 6, BoxYE + 2);
+								
+								a = getch();
+								switch(a)
+								{
+									case 8:
+									{
+										if (Meaning.length() > 0)
+										{
+											Meaning = Meaning.substr(0, Meaning.size() - 1);
+										}
+										break;
+									}										
+									default:
+									{
+										if((a < 123 && a > 96) || (a < 91 && a > 64) || a == 39 || a == 45 || a == 32 || a == 63)
+										{
+											Meaning += char(a);
+										}
+									}
+								}
+								if( a == 13 && Meaning != "")
+									break;
+								
+							}	
+							if ( a == 13)
+							{
+								Add_Mean_Head(Curr->data.First,FixText(Meaning));
+								updated = true;
+								changed = true;
+							}
 							Del_EditBox();
 							break;
 						}
@@ -900,20 +1101,59 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 							{
 								string Exam = "";
 								EditBox();
-								gotoxy(BoxXE + 2, BoxYE + 2);
-								getline(cin, Exam);
-								string *tmp = new string;
-								*tmp = Exam;
-								for(int i = 0; i < MAXEXAM; i++)
+								int a;
+								while( a != 27 )
 								{
-									if(Curr->data.Exam[i] == NULL)
+									gotoxy(BoxXE + 2, BoxYE + 2);
+									if (Exam.length() < BoxS1 - BoxXE + 5)
 									{
-										Curr->data.Exam[i] = tmp;
-										break;
+										cout << Exam;
+										for(int i = Exam.length(); i < BoxS1 - BoxXE + 4; i++)	cout<<" ";
 									}
+									else	for (int i = Exam.length() - (BoxS1 - BoxXE + 5) + 1; i< Exam.length(); i++)	cout << Exam[i];
+									
+									if (Exam.length() < BoxS1 - BoxXE + 4)	gotoxy(BoxXE + Exam.length() + 2, BoxYE + 2);
+									else gotoxy(BoxS1 + 6, BoxYE + 2);
+									
+									a = getch();
+									switch(a)
+									{
+										case 8:
+										{
+											if (Exam.length() > 0)
+											{
+												Exam = Exam.substr(0, Exam.size() - 1);
+											}
+											break;
+										}
+										
+										default:
+										{
+											if((a < 123 && a > 96) || (a < 91 && a > 64) || a == 39 || a == 45 || a == 32 || a == 63)
+											{
+												Exam += char(a);
+											}
+										}
+									}
+									if( a == 13 && Exam != "")
+										break;
+									
 								}
-								updated = true;
-								changed = true;
+								if( a == 13)
+								{
+									string *tmp = new string;
+									*tmp = FixText(Exam);
+									for(int i = 0; i < MAXEXAM; i++)
+									{
+										if(Curr->data.Exam[i] == NULL)
+										{
+											Curr->data.Exam[i] = tmp;
+											break;
+										}
+									}
+									updated = true;
+									changed = true;
+								}
 								Del_EditBox();
 							}
 							break;
@@ -924,27 +1164,41 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 				break;
 			}
 			
-			case 8:
+			case 8:		//Backspace
 			{
 				Del_Menu();
 				Confirm_Edit_Menu();
 				short input = 0;
-				while( input != 27 && input != 13)
+				while(1)
 				{
+					if( input == 27)
+						break;
+					if( input == 13 && Text != "" )
+						break;
+					else if( input == 13 && Text == "")
+					{
+						gotoxy(BoxXE + 2, BoxYE + 2);
+						cout<<"YOU CAN'T DELETE TYPE OF THE WORD !";
+						gotoxy(BoxXE + 2, BoxYE + 3);
+						cout<<"Press any key to continue !";
+						getch();
+						Del_EditBox();
+						EditBox();
+					}
 					EditBox();
 					gotoxy(BoxXE + 2, BoxYE + 2);
 					
 					if (Text.length() < BoxS1 - BoxXE + 5)
 					{
-							cout << Text;
-							for(int i = Text.length(); i < BoxS1 - BoxXE + 4; i++)	cout<<" ";
+						cout << Text;
+						for(int i = Text.length(); i < BoxS1 - BoxXE + 4; i++)	cout<<" ";
 					}
 					else	for (int i = Text.length() - (BoxS1 - BoxXE + 5) + 1; i< Text.length(); i++)	cout << Text[i];
 					
 					if (Text.length() < BoxS1 - BoxXE + 4)	gotoxy(BoxXE + Text.length() + 2, BoxYE + 2);
 					else gotoxy(BoxS1 + 6, BoxYE + 2);
 					
-					input = getch();cout<<input;
+					input = getch();
 					switch( input )
 					{
 						case 8:		//Backspace
@@ -981,7 +1235,10 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 					else if(Line < x + 4 && Line > x + 3 - CountExam(Curr))
 						{
 							tmp = x - (Line - 3);
-							*Curr->data.Exam[CountExam(Curr) - tmp - 1] = Text;
+							if(Text == " ")
+								DelExam(Curr,*Curr->data.Exam[CountExam(Curr) - tmp - 1]);
+							else
+								*Curr->data.Exam[CountExam(Curr) - tmp - 1] = Text;
 						}
 					else
 					{
@@ -992,7 +1249,10 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 							First = First->Next;
 							k++;
 						}
-						First->data = Text;
+						if(Text == " ")
+							DelMean(Curr->data.First,First->data);
+						else
+							First->data = Text;
 					}
 					updated = true;
 				}
@@ -1004,9 +1264,7 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 	}
 	Del_Menu();
 	Command_Menu();
-
 }
-
 short checkerror(HTable *Dict, string text, short k)
 {
 	text = FixText(text);
@@ -1021,12 +1279,15 @@ short checkerror(HTable *Dict, string text, short k)
 					return 2;
 				}
 			}
+		
 	}
 	if(k==2)
 	{
 		if(text == ""){
 			return 3;
 		}
+		else if(text[0] == ';' )
+			return 6;
 	}
 	if(k==3)
 	{
@@ -1040,6 +1301,7 @@ short checkerror(HTable *Dict, string text, short k)
 			return 5;
 		}
 	}
+	
 	return 0;
 }
 
@@ -1048,6 +1310,47 @@ void delerror()
 {
 	gotoxy(BoxX + 15, BoxY + 15);
 	for(int i=0; i<40; i++) cout<<" ";
+}
+void Add_Word_In_HTable(NODEWORD *&Head, NODEWORD *&Tail, NODEWORD *&NewWord)
+{
+	NODEWORD *run = Head;
+	if(Head == NULL)
+	{
+		Head = Tail = NewWord;
+	}
+	else {
+	while(run != NULL)
+		{
+			if(run->data.This.compare(NewWord->data.This) < 0) //so sanh tung kí tu cua tu, NewWord lon hon
+			{
+				if(run->Right == NULL) // them vao cuoi
+				{
+					run->Right = NewWord;
+					NewWord->Left = run;
+					Tail = NewWord;
+					break;
+				}
+				else run = run->Right;
+			}
+			else { //NewWord nho hon run
+				if(run == Head) { //Them vao dau
+					Head = NewWord;
+					Head->Right = run;
+					run->Left = Head;
+					break;
+				}
+				else {
+					NODEWORD *tmp = run->Left; //Them vao truoc run
+					tmp->Right = NewWord;
+					NewWord->Left = tmp;
+					NewWord->Right = run;
+					run->Left = NewWord;
+					break; 
+				}
+			}
+			
+		}
+	}
 }
 
 void printerror(short k)
@@ -1072,6 +1375,10 @@ void printerror(short k)
 	{
 		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap vi du cho tu!";
 	}
+	else if(k==6)
+	{
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Ki tu dau tien phai la alphabet!";
+	}
 }
 
 void printtextfield(string t, short k){
@@ -1084,46 +1391,6 @@ void printtextfield(string t, short k){
 		for(int i = 0; i < BoxS1-35 - t.length(); i++) cout << " ";
 	}
 }
-
-
-void Add_Word_In_HTable(NODEWORD *&Head, NODEWORD *&Tail, NODEWORD *&NewWord)
-{
-	NODEWORD *run = Head;
-	if(Head == NULL)
-	{
-		Head = Tail = NewWord;
-	}
-	else if (run == Head && run->data.This.compare(NewWord->data.This) > 0) // them vao dau
-		{
-			NewWord->Left = run;
-			run->Right = NewWord;
-			Head = NewWord;
-		}
-	else while(run != NULL)
-		{
-			if(run->data.This.compare(NewWord->data.This) < 0) //so sanh tung kí tu cua tu
-			{
-				if(run->Right == NULL) // them vao cuoi
-				{
-					run->Right = NewWord;
-					NewWord->Left = run;
-					Tail = NewWord;
-					break;
-				}
-				else if(run->Right->data.This.compare(NewWord->data.This) > 0) // them vao giua sau run
-				{
-					NODEWORD *tmp = run->Right;
-					tmp->Left = NewWord;
-					NewWord->Right = tmp;
-					NewWord->Left = run;
-					run->Right = NewWord;
-					break; 
-				}
-			}
-			run = run->Right;
-		}
-}
-
 void ComfilAddBox()
 {
 	gotoxy(BoxX+BoxS+38, BoxY+1);
@@ -1147,8 +1414,13 @@ void ComfilAddBox()
 	gotoxy(BoxX+BoxS+3, BoxY+10);
 	cout<<"Vi du 5:";
 }
-
-
+void confim_add()
+{
+	gotoxy(35, 12);
+	cout<<"Xac nhan luu tu moi!";
+	gotoxy(35, 15);
+	cout<<"Enter: Save "<<"    "<<" Esc: Quit"<<"    "<<" Another key: Back";
+}
 void Box_save_word()
 {
 	for(int i=0; i<7; i++)
@@ -1178,16 +1450,8 @@ void Box_save_word()
 	cout<<char(188);	
 }
 
-void confim_add()
-{
-	gotoxy(35, 12);
-	cout<<"Xac nhan luu tu moi!";
-	gotoxy(35, 15);
-	cout<<"Enter: Save "<<"    "<<" Esc: Quit"<<"    "<<" Another key: Back";
-}
 
-void Addword(HTable *&Dict){
-	//system("cls");
+void AddWord(HTable *&Dict){
 	DelDetail();
 	string text;
 	string field[8] = {""};
@@ -1197,52 +1461,60 @@ void Addword(HTable *&Dict){
 	int dem = field[k-1].length();
 	gotoxy(BoxX+BoxS +5, BoxY +BoxW + 2 );
 	cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!";
-	Del_Menu();
-		while(Input !=27){
-			Again:
-			ComfilAddBox();
-			gotoxy(BoxX + BoxS +11, BoxY +2+ k);
-			if (dem < BoxS1-35 )	
-			{
-				cout << text;
-				for (int i = 0; i < BoxS1-35-dem ; i++)	cout << " ";
-			}
+	Del_Menu();	
+	while(Input != 27)
+	{
+		ComfilAddBox();
+		gotoxy(BoxX + BoxS +11, BoxY +2+ k);
+		if (dem < BoxS1-35 )	
+		{
+			cout << text;
+			for (int i = 0; i < BoxS1-35-dem ; i++)	cout << " ";
+		}
+		else for (int i = dem - (BoxS1-35); i< dem; i++)	cout << text[i];
 			
-			else for (int i = dem - (BoxS1-35); i< dem; i++)	cout << text[i];
-			if(dem < BoxS1-35) gotoxy(BoxX + BoxS + 11 + dem, BoxY +2+ k); //Xuat ra vi tri con tro khi khung nhap chua bi tran
-			else gotoxy(BoxS1+6, BoxY +2+ k);
-			Input = getch();
-			gotoxy(1,1);
-			cout<<Input;
-			switch(Input)
+		if(dem < BoxS1-35) gotoxy(BoxX + BoxS + 11 + dem, BoxY +2+ k); //Xuat ra vi tri con tro khi khung nhap chua bi tran
+		else gotoxy(BoxS1+6, BoxY +2+ k);
+		Input = getch();
+		gotoxy(1,1);
+		cout<<Input;
+		switch(Input)
+		{
+			case 13://enter
 			{
-				case 13: //enter
-				{
-					if(checkerror(Dict, text, k) != 0)
+				if(checkerror(Dict, FixText(text), k) != 0)
 					{
 						Input = 0;
 						printerror(checkerror(Dict, text, k));
 					}
-					else
+				else
+				{
+					text=FixText(text);
+					printtextfield(text, k);
+					field[k-1] = text;
+					Del_Menu();
+					if(k<8) k++;
+					//if(k==9) goto Saveadd;
+					dem = field[k-1].length();
+					text = field[k-1];
+				}
+				break;
+			}
+			case 8: //Backspace
+				{
+					if(dem > 0)
 					{
-						text = FixText(text);
-						printtextfield(text, k);
-						field[k-1] = text;
-						Del_Menu();
-						k++;
-						if(k==8) goto Saveadd;
-						dem = field[k-1].length();
-						text = field[k-1];	
-					}	
+						dem--;
+						text = text.substr(0, text.size() - 1);
+					}
 					break;
 				}
-				
-			case 224:
+			case 224: //up down
 				{
 					Input = getch();
-					if(Input == 72) //up
+					if(Input == 72) // up
 					{
-						if(checkerror(Dict, text, k) != 0)
+						if(checkerror(Dict, FixText(text), k) != 0)
 						{
 							Input = 0;
 							printerror(checkerror(Dict, text, k));
@@ -1257,115 +1529,109 @@ void Addword(HTable *&Dict){
 							dem = field[k-1].length();
 							text = field[k-1];	
 						}
-						//break;
 					}
-					else if(Input == 80) //down
+					else if(Input == 80) // down
 					{
-						if(checkerror(Dict, text, k) != 0)
+						if(checkerror(Dict, FixText(text), k) != 0)
 						{
 							Input = 0;
 							printerror(checkerror(Dict, text, k));
 						}
-						else
+						else 
 						{
 							text = FixText(text);
 							printtextfield(text, k);
 							field[k-1] = text;
 							Del_Menu();
 							if(k<8) k++;
-							//else if(k==17) break;
 							dem = field[k-1].length();
 							text = field[k-1];	
 						}
-						//break;
 					}
 					break;
 				}
-			case 8: //backspace
+			default:
 				{
-					if(dem > 0)
+					if((Input < 123 && Input > 96) || (Input < 91 && Input > 64) || Input == 32 || Input == 39 || Input == 45 || Input == 59 || Input ==63||Input == 33)
 					{
-						dem--;
-						text = text.substr(0, text.size() - 1);
-					}
-					break;
-				}
-			default: //alphabet
-				{
-					if((Input < 123 && Input > 96) || (Input < 91 && Input > 64) || Input == 32 || Input == 39 || Input == 45 || Input == 59)
-					{
+						if(dem == 0 && (Input == 39 || Input == 45 || Input == 59 || Input ==63||Input == 33))//chu cai dau tien va nhap ki tu dac biet 
+						{
+						}
+						else if(Input==33||Input == 63) //dau ? !
+						{
+							if(k==4||k==5||k==6||k==7||k==8)
+							{
+								text += char(Input);
+								dem++;
+							}
+						}
+						else if(Input==59)//dau ;
+						{
+							if(k==3) // khung nghia
+							{
+								text += char(Input);
+								dem++;
+							}
+						}
+						else if(Input == 45) //dau rach noi -
+						{
+							if(k==1)//khung tu
+							{
+								text += char(Input);
+								dem++;
+							}
+						}
+						else{
 						text += char(Input);
 						dem++;
-						gotoxy(BoxX +BoxS+ 11, BoxY +2+ k);
-						if (dem < BoxS1-35)
-						{
-							cout << text;
-						}
-						else
-						{
-							for (int i = dem - (BoxS1-35); i< dem; i++)	cout << text[i];
 						}
 					}
-				}
-			}
-			}
-			if(field[0]!="" && field[1] !="" && field[2]!=""){
-				Saveadd:
-				Box_save_word();
-				confim_add();
-				Input = getch();
-				if(Input == 13)
-				{
-					gotoxy(5, 1);
-					cout<<Input;
-					NODEWORD *Tu1 = new NODEWORD;
-					Tu1->data.This = field[0];
-					Tu1->data.Type = field[1];
-					string t = field[2];
-					string tmp = "";
-					Tu1->data.First = NULL;
-					for(int i=0; i<=t.length(); i++)
-					{
-						if(t[i] == ';')
-						{
-							Add_Mean_Head(Tu1->data.First, tmp); // them vao dau moi nghia
-							tmp = "";
-							i++;
-						}
-						//tmp += t[i];
-						if(t[i] == '\0')
-						{
-							Add_Mean_Head(Tu1->data.First, tmp);
-						}
-						tmp += t[i];
-					}
-					for(int i=0;i<5; i++)
-					{
-						if(field[i+3] != "")
-						{
-							Tu1->data.Exam[i]=new string;
-							*(Tu1->data.Exam[i]) = field[i+3];
-						}
-					}
-					updated = true;
-					Add_Word_In_HTable(Dict[Address(Tu1->data.This)].Head, Dict[Address(Tu1->data.This)].Tail, Tu1);
-				}
-				else if((Input < 123 && Input > 96) || (Input < 91 && Input > 64) || Input == 32 || Input == 39 || Input == 45 || Input == 59)
-				{
-					for(int i=0; i<8; i++)
-					{
-						gotoxy(33,10+i);
-						for(int j=0; j<55;j++)
-						cout<<" ";
-					}
-					goto Again;
-				}
+				}			
 			}
 		}
-//	}
-//			
-//}
-
+	if(field[0]!=""&&field[1]!=""&&field[2]!=""&&field[3]!="")
+	{
+		Box_save_word();
+		confim_add();
+		Input=getch();
+		gotoxy(7,1);
+		cout<<Input;
+		if(Input==13)
+		{
+			NODEWORD *Tu1 = new NODEWORD;
+			Tu1->data.This = field[0];
+			Tu1->data.Type = field[1];
+			Tu1->data.First=NULL;
+			string t=field[2];
+			string tmp="";
+			for(int i=0; i<=t.length();i++)
+			{
+				if(t[i]!=';'||t[i]!='\0')
+				{
+					tmp+=t[i];
+				}
+				else{
+					if(FixText(tmp)!="")
+					{
+						Add_Mean_Head(Tu1->data.First, tmp); // them vao dau moi nghia
+						tmp = "";
+					}
+				}
+			}
+			for(int i=0;i<5; i++)
+			{
+				if(field[i+3] != "")
+				{
+					Tu1->data.Exam[i]=new string;
+					*(Tu1->data.Exam[i]) = field[i+3];
+				}
+				SortExam(Tu1);
+			}
+			updated = true;
+			Add_Word_In_HTable(Dict[Address(Tu1->data.This)].Head, Dict[Address(Tu1->data.This)].Tail, Tu1);
+		}
+	}
+}
 //		  =========== End Detail =============
 
 void SearchBox(HTable *&Dict, NODEWORD *&Curr)
@@ -1375,11 +1641,11 @@ void SearchBox(HTable *&Dict, NODEWORD *&Curr)
 	string Text = "";
 	string Str = "Enter Text";
 	int Count = 0;
-	
+	DictBox();
+	Command_Menu();
 	while(1)
 	{
-		DictBox();
-		Command_Menu();
+		
 		gotoxy(BoxX + 12, BoxY + 1);
 		
 		if(Text == "")
@@ -1442,7 +1708,7 @@ void SearchBox(HTable *&Dict, NODEWORD *&Curr)
 		
 			case 9:		//Tab
 			{
-				Addword(Dict);
+				AddWord(Dict);
 				break;
 			}
 		
@@ -1557,10 +1823,21 @@ void WriteFile(HTable *Dict)
 	}
 	
 }
-
+void Background(void)
+{
+	gotoxy(0,43);
+	system("color 73");
+	cout<<"     1010100011     010     00111111  10100110101  101     110111000     0010     110      1000       101000001   100     101	"<<endl;
+	cout<<"     110     1011   111    010    110     100      001   1011     0101   00001    010     111000      001    011   100   101		"<<endl;
+	cout<<"     101      1011  011   000             011      011  111         011  1101000  001    010  011     000    110    110 010		"<<endl;
+	cout<<"     101      1001  100   000             110      101  110         101  110  010 000   010    100    001110000      11100		"<<endl;
+	cout<<"     100     0101   101    101    100     001      010   0011     0111   110   001000  110110010010   100    000      100		"<<endl;
+	cout<<"     1000100010     100     01110001      011      110     101011000     101    10111 011        000  111     111     001		"<<endl;
+}
 int main() 
 {
 	system("color 73");
+	Background();
 	HTable *Dict = new HTable[26];
 	
 	for (int i = 0; i < 26; i++) 
@@ -1574,6 +1851,5 @@ int main()
 	SearchBox(Dict,Curr);
 	if(updated)
 		WriteFile(Dict);
-	//Addword(Dict);
 	return 0;
 }
