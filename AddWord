@@ -1,0 +1,440 @@
+#include <iostream>
+using namespace std;
+
+short checkerror(HTable *Dict, string text, short k)
+{
+	text = FixText(text);
+	if(k==1)
+	{
+		if(text == "") {
+			return 1;
+		}
+		else if(Search(Dict, text)!=NULL)
+			{
+				if(Search(Dict, text)->data.This.length() == text.length()) {
+					return 2;
+				}
+			}
+		
+	}
+	if(k==2)
+	{
+		if(text == ""){
+			return 3;
+		}
+		else if(text[0] == ';' )
+			return 6;
+	}
+	if(k==3)
+	{
+		if(text == ""){
+			return 4;
+		}
+	}
+	if(k==4)
+	{
+		if(text == ""){
+			return 5;
+		}
+	}
+	
+	return 0;
+}
+
+
+void delerror()
+{
+	gotoxy(BoxX + 15, BoxY + 15);
+	for(int i=0; i<40; i++) cout<<" ";
+}
+void Add_Word_In_HTable(NODEWORD *&Head, NODEWORD *&Tail, NODEWORD *&NewWord)
+{
+	NODEWORD *run = Head;
+	if(Head == NULL)
+	{
+		Head = Tail = NewWord;
+	}
+	else {
+	while(run != NULL)
+		{
+			if(run->data.This.compare(NewWord->data.This) < 0) //so sanh tung kí tu cua tu, NewWord lon hon
+			{
+				if(run->Right == NULL) // them vao cuoi
+				{
+					run->Right = NewWord;
+					NewWord->Left = run;
+					Tail = NewWord;
+					break;
+				}
+				else run = run->Right;
+			}
+			else { //NewWord nho hon run
+				if(run == Head) { //Them vao dau
+					Head = NewWord;
+					Head->Right = run;
+					run->Left = Head;
+					break;
+				}
+				else {
+					NODEWORD *tmp = run->Left; //Them vao truoc run
+					tmp->Right = NewWord;
+					NewWord->Left = tmp;
+					NewWord->Right = run;
+					run->Left = NewWord;
+					break; 
+				}
+			}
+			
+		}
+	}
+}
+
+void printerror(short k)
+{
+	if(k==1)
+	{
+		gotoxy(BoxX + 30, BoxY+BoxW + 4); cout << "ERROR: " <<"Vui long nhap tu!";
+	}
+	else if(k==2)
+	{
+		gotoxy(BoxX + 30, BoxY +BoxW + 4); cout << "ERROR: " <<"Tu nay da co trong tu dien, xin kiem tra lai!";
+	}
+	else if(k==3)
+	{
+		gotoxy(BoxX + 30, BoxY +BoxW+ 4); cout << "ERROR: " <<"Vui long nhap loai tu!";	
+	}
+	else if(k==4)
+	{
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap nghia cua tu!";
+	}
+	else if(k==5)
+	{
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap vi du cho tu!";
+	}
+	else if(k==6)
+	{
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Ki tu dau tien phai la alphabet!";
+	}
+}
+
+void printtextfield(string t, short k){
+	gotoxy(BoxX + BoxS + 11, BoxY + 2+k);
+	if(t.length() > BoxS1-35) {
+		for (int i = t.length() - (BoxS1-35); i< t.length(); i++)	cout << t[i];
+	}
+	else if(t.length() < BoxS1-35) {
+		cout << t;
+		for(int i = 0; i < BoxS1-35 - t.length(); i++) cout << " ";
+	}
+}
+void ComfilAddBox()
+{
+	gotoxy(BoxX+BoxS+38, BoxY+1);
+	cout<<"            ";
+	gotoxy(BoxX+BoxS+38, BoxY+1);
+	cout<<" ADD WORD ";
+	gotoxy(BoxX+BoxS+3, BoxY+3);
+	cout<<"     Tu:";
+	gotoxy(BoxX+BoxS+3, BoxY+4);
+	cout<<"Loai tu:";
+	gotoxy(BoxX+BoxS+3, BoxY+5);
+	cout<<"  Nghia:";
+	gotoxy(BoxX+BoxS+3, BoxY+6);
+	cout<<"Vi du 1:";
+	gotoxy(BoxX+BoxS+3, BoxY+7);
+	cout<<"Vi du 2:";
+	gotoxy(BoxX+BoxS+3, BoxY+8);
+	cout<<"Vi du 3:";
+	gotoxy(BoxX+BoxS+3, BoxY+9);
+	cout<<"Vi du 4:";
+	gotoxy(BoxX+BoxS+3, BoxY+10);
+	cout<<"Vi du 5:";
+}
+void confim_add()
+{
+	gotoxy(35, 16);
+	cout<<"Xac nhan luu tu moi!";
+	gotoxy(35, 19);
+	cout<<"Enter: Save "<<"    "<<" Esc: Quit"<<"    "<<" Another key: Back";
+}
+void Command_Menu_Add(void)
+{
+	Del_Menu();
+	gotoxy(BoxX, BoxY + BoxW + 4);
+	cout << "\t\tEsc: Exit ! \t\tEnter: Move & Save !\t\tUp & Down: Move !";
+}
+
+void Box_save_word()
+{
+	for(int i=0; i<7; i++)
+	{
+		gotoxy(33,14+i);
+		for(int j=0; j<66;j++)
+			cout<<" ";
+	}
+	gotoxy(33,14);
+	cout<<char(201);
+	for(int i=0; i<50; i++)
+	{
+		cout<<char(205);
+	}
+	cout<<char(187);
+	for(int i=0;i<6;i++)
+	{
+		gotoxy(33,15+i);
+		cout<<char(186);
+		gotoxy(84,15+i);
+		cout<<char(186);
+	}
+	gotoxy(33, 21);
+	cout<<char(200);
+	for(int i=0; i<50; i++)
+	cout<<char(205);
+	cout<<char(188);	
+}
+
+
+void AddWord(HTable *&Dict){
+	DelDetail();
+	string text;
+	string field[8] = {""};
+	int k = 1;
+	int Input = 0;
+	text = field[k-1];
+	int dem = field[k-1].length();
+	gotoxy(BoxX+BoxS +5, BoxY +BoxW + 2 );
+	cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!";
+	Del_Menu();
+	Command_Menu_Add();	
+	while(Input != 27)
+	{
+		field[k-1] = text;
+		ComfilAddBox();
+		//Command_Menu_Add();
+		gotoxy(BoxX + BoxS +11, BoxY +2+ k);
+		if (dem < BoxS1-35 )	
+		{
+			cout << text;
+			for (int i = 0; i < BoxS1-35-dem ; i++)	cout << " ";
+		}
+		else for (int i = dem - (BoxS1-35); i< dem; i++)	cout << text[i];
+			
+		if(dem < BoxS1-35) gotoxy(BoxX + BoxS + 11 + dem, BoxY +2+ k); //Xuat ra vi tri con tro khi khung nhap chua bi tran
+		else gotoxy(BoxS1+6, BoxY +2+ k);
+		Input = getch();
+		gotoxy(1,1);
+		cout<<Input;
+		switch(Input)
+		{
+			case 13://enter
+			{
+				if(checkerror(Dict, FixText(text), k) != 0)
+					{
+						Input = 0;
+						Del_Menu();
+						printerror(checkerror(Dict, text, k));
+					}
+				else
+				{
+					text=FixText(text);
+					printtextfield(text, k);
+					Del_Menu();
+					Command_Menu_Add();
+					k++;
+					if(k==9) goto Saveadd;
+					dem = field[k-1].length();
+					text = field[k-1];
+				}
+				break;
+			}
+			case 8: //Backspace
+				{
+					if(dem > 0)
+					{
+						dem--;
+						text = text.substr(0, text.size() - 1);
+					}
+					break;
+				}
+			case 224: //up down
+				{
+					Input = getch();
+					if(Input == 72) // up
+					{
+						if(checkerror(Dict, FixText(text), k) != 0)
+						{
+							Input = 0;
+							Del_Menu();
+							printerror(checkerror(Dict, text, k));
+						}
+						else
+						{
+							text = FixText(text);
+							printtextfield(text, k);
+							field[k-1] = text;
+							Del_Menu();
+							Command_Menu_Add();
+							if(k>1) k--;
+							dem = field[k-1].length();
+							text = field[k-1];	
+						}
+					}
+					else if(Input == 80) // down
+					{
+						if(checkerror(Dict, FixText(text), k) != 0)
+						{
+							Input = 0;
+							Del_Menu();
+							printerror(checkerror(Dict, text, k));
+						}
+						else 
+						{
+							text = FixText(text);
+							printtextfield(text, k);
+							field[k-1] = text;
+							Del_Menu();
+							Command_Menu_Add();
+							if(k<8) k++;
+							dem = field[k-1].length();
+							text = field[k-1];	
+						}
+					}
+					break;
+				}
+			default:
+				{
+					if((Input < 123 && Input > 96) || (Input < 91 && Input > 64) || Input == 32 || Input == 39 || Input == 45 || Input == 59 || Input ==63||Input == 33)
+					{
+						if(dem == 0 && (Input == 39 || Input == 45 || Input == 59 || Input ==63||Input == 33))//chu cai dau tien va nhap ki tu dac biet 
+						{
+						}
+						else if(Input==33||Input == 63) //dau ? !
+						{
+							if(k==4||k==5||k==6||k==7||k==8)
+							{
+								text += char(Input);
+								dem++;
+							}
+						}
+						else if(Input==59)//dau ;
+						{
+							if(k==3) // khung nghia
+							{
+								text += char(Input);
+								dem++;
+							}
+						}
+						else if(Input == 45) //dau rach noi -
+						{
+							if(k==1)//khung tu
+							{
+								text += char(Input);
+								dem++;
+							}
+						}
+						else{
+						text += char(Input);
+						dem++;
+						}
+					}
+				}
+				Backtime:;		
+			}
+		}
+	if(field[0]!=""&&field[1]!=""&&field[2]!=""&&field[3]!="")
+	{
+		Saveadd:
+		Box_save_word();
+		confim_add();
+		Input=getch();
+		gotoxy(7,1);
+		cout<<Input;
+		if(Input==13)
+		{
+			NODEWORD *Tu1 = new NODEWORD();
+//			Tu1->Left = Tu1->Right = NULL;
+			Tu1->data.This = field[0];
+			Tu1->data.Type = field[1];
+			Tu1->data.First=NULL;
+			string t=field[2];
+			string tmp="";
+			for(int i=0; i<=t.length();i++)
+			{
+				if(t[i]!=';' && t[i]!='\0')
+				{
+					tmp+=t[i];
+				}
+				else{
+					if(FixText(tmp)!="")
+					{
+						Add_Mean_Head(Tu1->data.First, tmp); // them vao dau moi nghia
+						tmp = "";
+					}
+				}
+			}
+			for(int i=0;i<5; i++)
+			{
+				if(field[i+3] != "")
+				{
+					Tu1->data.Exam[i]=new string;
+					*(Tu1->data.Exam[i]) = field[i+3];
+				}
+				SortExam(Tu1);
+			}
+			updated = true;
+			Add_Word_In_HTable(Dict[Address(Tu1->data.This)].Head, Dict[Address(Tu1->data.This)].Tail, Tu1);
+		}
+		else if(Input == 27)
+		{
+		}
+		else{
+			for(int i=0; i<8; i++)
+			{
+				gotoxy(33,14+i);
+				for(int j=0; j<66;j++)
+				cout<<" ";
+			}
+			goto Backtime;
+		}
+	}
+}
+
+int main()
+{
+	cout<<"  s 88 ooooooooooooooo 88     s 888888888888888888888888888888888888888"<<endl;
+	cout<<"  S 88 888888888888888 88    SS 888888888888888888888888888888888888888"<<endl;
+	cout<<" SS 88 888888888888888 88   SSS 8888                         - --+ 8888"<<endl;
+	cout<<" SS 88 ooooooooooooooo 88  sSSS 8888           o8888888o         | 8888"<<endl;
+	cout<<"sSS 88 888888888888888 88 SSSSS 8888         o88888888888o         8888"<<endl;
+	cout<<"SSS 88 888888888888888 88 SSSSS 8888        8888 88888 8888      | 8888"<<endl;
+	cout<<"SSS 88 ooooooooooooooo 88 SSSSS 8888       o888   888   888o       8888"<<endl;
+	cout<<"SSS 88 888888888888888 88 SSSSS 8888       8888   888   8888       8888"<<endl;
+	cout<<"SSS 88 888888888888888 88 SSSSS 8888       8888   888   8888       8888"<<endl;
+	cout<<"SSS 88 oooooooooo      88 SSSSS 8888       8888o o888o o8888       8888"<<endl;
+	cout<<"SSS 88 8888888888 .::. 88 SSSSS 8888       988 8o88888o8 88P       8888"<<endl;
+	cout<<"SSS 88 oooooooooo :::: 88 SSSSS 8888        8oo 9888889 oo8        8888"<<endl;
+	cout<<"SSS 88 8888888888  `'  88 SSSSS 8888         988o     o88P         8888"<<endl;
+	cout<<"SSS 88ooooooooooooooooo88  SSSS 8888           98888888P           8888"<<endl;
+	cout<<"SSS 888888888888888888888__SSSS 8888                               8888"<<endl;
+	cout<<"SSS |   *  *  *   )8c8888  SSSS 888888888888888888888888888888888888888"<<endl;
+	cout<<"SSS 888888888888888888888 \_ SSsssss oooooooooooooooooooooooooooo ssss"<<endl;
+	cout<<"SSS 888888888888888888888  \\   __SS 88+-8+-88============8-8==88 S"<<endl;
+	cout<<"SSS 888888888888888888888-. \\  \  S 8888888888888888888888888888"<<endl;
+	cout<<"SSS 888888888888888888888  \\\  \\       `.__________.'      ` ."<<endl;
+	cout<<"SSS 88O8O8O8O8O8O8O8O8O88  \\.   \\______________________________`_."<<endl;
+	cout<<"SSS 88 el cheapo 8O8O8O88 \\  '.  \|________________________________|"<<endl;
+	cout<<"SS 88O8O8O8O8o8O8O8O8O88  \\   '-.___"<<endl;
+	cout<<"S 888888888888888888888 /~          ~~~~~-----~~~~---.__"<<endl;
+	cout<<"\ \______\ __________________________________________\-------^.-----------."<<endl;
+	cout<<":'  _   _ _ _ _  _ _ _ _  _ _ _ _   _ _ _           `\        \""<<endl;
+	cout<<"::\ ,\_\,\_\_\_\_\\_\_\_\_\\_\_\_\_\,\_\_\_\           \      o '8o 8o ."<<endl;
+	cout<<"|::\  -_-_-_-_-_-_-_-_-_-_-_-_-_-___  -_-_-_   _ _ _ _  \      8o 88 88 \""<<endl;
+	cout<<" |_::\ ,\_\_\_\_\_\_\_\_\_\_\_\_\_\___\,\_\_\_\,\_\_\_\_\ \      88       \""<<endl;
+	cout<<"    `:\ ,\__\_\_\_\_\_\_\_\_\_\_\_\_\  \,\_\_\_\,\_\_\_\ \ \      88       ."<<endl;
+	cout<<"     `:\ ,\__\_\_\_\_\_\_\_\_\_\_\_\____\    _   ,\_\_\_\_\ \      88o    .|"<<endl;
+	cout<<"       :\ ,\____\_\_\_\_\_\_\_\_\_\_\____\  ,\_\ _,\_\_\_\ \ \      'ooooo'"<<endl;
+	cout<<"        :\ ,\__\\__\_______________\__\\__\,\_\_\_\,\___\_\_\ \""<<endl;
+	cout<<"         `\  --  -- --------------- --  --   - - -   --- - -   )____________"<<endl;
+	cout<<"           `--------------------------------------------------'"<<endl;
+	return 0;
+}
