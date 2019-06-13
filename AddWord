@@ -109,7 +109,7 @@ NODEWORD* SplitInfo(string Line)
 	
 	i++;
 	Text = "";
-	while (Line[i] != '/') 
+	while (Line[i] != '/')
 	{
 		Text += Line[i++];
 	}
@@ -121,7 +121,7 @@ NODEWORD* SplitInfo(string Line)
 	while (Line[i] != '/') 
 	{
 		Text += Line[i++];
-		if (Line[i] == ';') 
+		if (Line[i] == ';')
 		{
 			Add_Mean_Head(p->data.First, Text);
 			Text = "";
@@ -450,7 +450,7 @@ NODEWORD *Left(HTable *Dict, NODEWORD *Curr)
 
 //        ===========  Detail ==========
 
-string Tail_String_Out(string text, short max)
+string Tail_String_Out(string text, short max) //ham tra ve cac chu cua dong cuoi cung
 {
 	short x = max;
 	short i = 0;
@@ -720,6 +720,17 @@ void DeleteWord(HTable *&Dict, NODEWORD *&Del)
 	}
 }
 
+void Delete_all(HTable *&Dict)
+{
+	NODEWORD *p = NULL;
+	FindFirst(Dict,p);
+	while(p!=NULL)
+	{
+		DeleteWord(Dict, p);
+		FindFirst(Dict,p);
+	}
+}
+
 void DeleteCurrent(HTable *&Dict, NODEWORD *&Curr)
 {
 	if(Curr != NULL)
@@ -958,8 +969,11 @@ void Edit(HTable *&Dict, NODEWORD *&Curr)
 		else if(Line < x + 4 && Line > x + 3 - CountExam(Curr))
 			{
 				tmp = x - (Line - 3);
-				Text = *Curr->data.Exam[CountExam(Curr) - tmp - 1];	
-				gotoxy(BoxX + BoxS + 8 + Tail_String_Out(FixText(Text),  BoxS1 - BoxS - 8).length(), BoxY + Move);
+				Text = *Curr->data.Exam[CountExam(Curr) - tmp - 1];			//countexam - x
+			//	if ( stringlineout(Text, BoxS1 - BoxS - 3) == 1)
+					gotoxy(BoxX + BoxS + 8 + Tail_String_Out(FixText(Text),  BoxS1 - BoxS - 8).length(), BoxY + Move);
+			//	else
+			//		gotoxy(BoxX + BoxS + 15 + Tail_String_Out(FixText(Text),  BoxS1 - BoxS - 8).length(), BoxY + Move);
 			}
 		else
 		{
@@ -1422,27 +1436,27 @@ void printerror(short k)
 {
 	if(k==1)
 	{
-		gotoxy(BoxX + 30, BoxY+BoxW + 4); cout << "ERROR: " <<"Vui long nhap tu!";
+		gotoxy(BoxX + 30, BoxY+BoxW + 4); cout << "ERROR: " <<"Please enter the word";
 	}
 	else if(k==2)
 	{
-		gotoxy(BoxX + 30, BoxY +BoxW + 4); cout << "ERROR: " <<"Tu nay da co trong tu dien, xin kiem tra lai!";
+		gotoxy(BoxX + 30, BoxY +BoxW + 4); cout << "ERROR: " <<"This word has been already - Please check again";
 	}
 	else if(k==3)
 	{
-		gotoxy(BoxX + 30, BoxY +BoxW+ 4); cout << "ERROR: " <<"Vui long nhap loai tu!";	
+		gotoxy(BoxX + 30, BoxY +BoxW+ 4); cout << "ERROR: " <<"Please enter the type";	
 	}
 	else if(k==4)
 	{
-		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap nghia cua tu!";
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Please enter the meaning";
 	}
 	else if(k==5)
 	{
-		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Vui long nhap vi du cho tu!";
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Please enter the exam";
 	}
 	else if(k==6)
 	{
-		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "Ki tu dau tien phai la alphabet!";
+		gotoxy(BoxX + 30, BoxY + BoxW+4); cout << "ERROR: " << "The 1s character must be alphabet!";
 	}
 }
 
@@ -1463,26 +1477,26 @@ void ComfilAddBox()
 	gotoxy(BoxX+BoxS+38, BoxY+1);
 	cout<<" ADD WORD ";
 	gotoxy(BoxX+BoxS+3, BoxY+3);
-	cout<<"     Tu:";
+	cout<<" Word  :";
 	gotoxy(BoxX+BoxS+3, BoxY+4);
-	cout<<"Loai tu:";
+	cout<<" Type  :";
 	gotoxy(BoxX+BoxS+3, BoxY+5);
-	cout<<"  Nghia:";
+	cout<<" Mean  :";
 	gotoxy(BoxX+BoxS+3, BoxY+6);
-	cout<<"Vi du 1:";
+	cout<<" Exam 1:";
 	gotoxy(BoxX+BoxS+3, BoxY+7);
-	cout<<"Vi du 2:";
+	cout<<" Exam 2:";
 	gotoxy(BoxX+BoxS+3, BoxY+8);
-	cout<<"Vi du 3:";
+	cout<<" Exam 3:";
 	gotoxy(BoxX+BoxS+3, BoxY+9);
-	cout<<"Vi du 4:";
+	cout<<" Exam 4:";
 	gotoxy(BoxX+BoxS+3, BoxY+10);
-	cout<<"Vi du 5:";
+	cout<<" Exam 5:";
 }
 void confim_add()
 {
 	gotoxy(35, 16);
-	cout<<"Xac nhan luu tu moi!";
+	cout<<"Do yo want to save this word?";
 	gotoxy(35, 19);
 	cout<<"Enter: Save "<<"    "<<" Esc: Quit"<<"    "<<" Another key: Back";
 }
@@ -1522,8 +1536,14 @@ void Box_save_word()
 	cout<<char(188);	
 }
 
+void Del_title()
+{
+	gotoxy(BoxX+BoxS+38, BoxY+1);
+	cout<<"          ";
+}
 
 void Add_Word(HTable *&Dict){
+	Del_title();
 	DelDetail();
 	string text;
 	string field[8] = {""};
@@ -1532,7 +1552,7 @@ void Add_Word(HTable *&Dict){
 	text = field[k-1];
 	int dem = field[k-1].length();
 	gotoxy(BoxX+BoxS +5, BoxY +BoxW + 2 );
-	cout<<"Luu y: Moi nghia cach nhau 1 dau cham phay!";
+	cout<<"Note: Each meaning is separated by ';'";
 	Del_Menu();
 	Command_Menu_Add();	
 	while(Input != 27)
@@ -1550,6 +1570,8 @@ void Add_Word(HTable *&Dict){
 		if(dem < BoxS1-35) gotoxy(BoxX + BoxS + 11 + dem, BoxY +2+ k); //Xuat ra vi tri con tro khi khung nhap chua bi tran
 		else gotoxy(BoxS1+6, BoxY +2+ k);
 		Input = getch();
+//		gotoxy(1,1);
+//		cout<<Input;
 		switch(Input)
 		{
 			case 13://enter
@@ -1672,9 +1694,7 @@ void Add_Word(HTable *&Dict){
 		Saveadd:
 		Box_save_word();
 		confim_add();
-		Input=getch();
-		gotoxy(7,1);
-		cout<<Input;
+		Input=getch();	
 		if(Input==13)
 		{
 			NODEWORD *Tu1 = new NODEWORD();
@@ -1723,6 +1743,10 @@ void Add_Word(HTable *&Dict){
 			goto Backtime;
 		}
 	}
+	gotoxy(BoxX + BoxS + 38, BoxY + 1);
+	cout << "INFORMATION";
+	Del_Menu();
+	Command_Menu();
 }
 
 //		  =========== End Detail =============
@@ -1803,6 +1827,7 @@ void SearchBox(HTable *&Dict, NODEWORD *&Curr)
 			{
 				Add_Word(Dict);
 				break;
+
 			}
 		
 			case 224:	//Up Down
@@ -1866,19 +1891,19 @@ void SearchBox(HTable *&Dict, NODEWORD *&Curr)
 	}
 	
 }
-//
-//void xuat(int &i, NODEMEAN *Curr)
-//{
-//	if(Curr != NULL)
-//	{
-//		gotoxy(BoxX, BoxY + i);
-//		i++;
-//		cout<<Curr->data;
-//		Curr = Curr->Next;
-//		xuat(i,Curr);
-//	}
-//	return;
-//}
+
+void xuat(int &i, NODEMEAN *Curr)
+{
+	if(Curr != NULL)
+	{
+		gotoxy(BoxX, BoxY + i);
+		i++;
+		cout<<Curr->data;
+		Curr = Curr->Next;
+		xuat(i,Curr);
+	}
+	return;
+}
 
 void WriteFile(HTable *Dict)
 {
@@ -1921,7 +1946,7 @@ void Background(void)
 	gotoxy(0,43);
 	system("color 73");
 	string BR[35];
-//	getch();
+	getch();
 	BR[0] = "  s 88 ooooooooooooooo 88     s 888888888888888888888888888888888888888     ";
 	BR[1] = "  S 88 888888888888888 88    SS 888888888888888888888888888888888888888     ";
 	BR[2] = " SS 88 888888888888888 88   SSS 8888                         - --+ 8888     ";
@@ -1973,20 +1998,8 @@ void Background(void)
 			gotoxy(118 + i, 3 + j);
 			cout << BR[j][i];
 		}
-		Sleep(2);
+		Sleep(5);
 	}
-	gotoxy(163,46);
-	cout << "PTIT Products";
-	gotoxy(163,47);
-	cout << "Created by Nhat Tan & Minh Bui";
-	gotoxy(0,39);
-	cout << "              ########  ####  ######  ######## ####  #######  ##    ##    ###    ########  ##    ## " << endl;
-	cout << "              ##     ##  ##  ##    ##    ##     ##  ##     ## ###   ##   ## ##   ##     ##  ##  ##  " << endl;
-	cout << "              ##     ##  ##  ##          ##     ##  ##     ## ####  ##  ##   ##  ##     ##   ####   " << endl;     
-	cout << "              ##     ##  ##  ##          ##     ##  ##     ## ## ## ## ##     ## ########     ##    " << endl;     
-	cout << "              ##     ##  ##  ##          ##     ##  ##     ## ##  #### ######### ##   ##      ##    " << endl;     
-	cout << "              ##     ##  ##  ##    ##    ##     ##  ##     ## ##   ### ##     ## ##    ##     ##    " << endl;     
-	cout << "              ########  ####  ######     ##    ####  #######  ##    ## ##     ## ##     ##    ##    " << endl;   
 }
 int main() 
 {
@@ -2005,7 +2018,8 @@ int main()
 	SearchBox(Dict,Curr);
 	if(updated)
 		WriteFile(Dict);
-
+	Delete_all(Dict);
+	delete Dict;
 	
 //	cout<<Tail_String_Out(*Curr->data.Exam[1], BoxS1 - BoxS - 3);
 	return 0;
